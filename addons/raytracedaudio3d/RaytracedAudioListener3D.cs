@@ -257,10 +257,10 @@ public partial class RaytracedAudioListener3D : AudioListener3D {
         float e = roomSize * EchoRoomSizeMultiplier / SPEED_OF_SOUND;
 
         reverbEffect.RoomSize = Mathf.Lerp(reverbEffect.RoomSize, Mathf.Clamp(e, 0, 1), EchoInterpolation);
-        reverbEffect.PredelayMsec = Mathf.Lerp(reverbEffect.PredelayMsec, e=1000, EchoInterpolation);
+        reverbEffect.PredelayMsec = Mathf.Lerp(reverbEffect.PredelayMsec, e * 1000, EchoInterpolation);
         reverbEffect.PredelayFeedback = Mathf.Lerp(reverbEffect.PredelayFeedback, Mathf.Clamp(e, 0, 0.98f), EchoInterpolation);
 
-        float returnRatio = bounces == 0 ? 0 : (echoCount/bounces);
+        float returnRatio = bounces == 0 ? 0 : ((float) echoCount / (float)bounces);
         reverbEffect.Hipass = Mathf.Lerp(reverbEffect.Hipass, 1-returnRatio, EchoInterpolation);
     }
 
