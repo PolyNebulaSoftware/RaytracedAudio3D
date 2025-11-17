@@ -1,5 +1,5 @@
-# C# RaytracedAudioPlayer & Listener
-A C# rewrite of [Tienne_k's raytraced-audio](https://github.com/WhoStoleMyCoffee/raytraced-audio) for Godot projects on CSharp. 
+# C# RaytracedAudio Player & Listener
+A rewrite of [Tienne_k's raytraced-audio](https://github.com/WhoStoleMyCoffee/raytraced-audio) addon for Godot projects on CSharp. 
 
 ## Added Classes
 - `RaytracedAudioListener3D` extends `AudioListener3D`
