@@ -68,7 +68,7 @@ public partial class AudioRay3D : RayCast3D {
             player.LowPassRaysCount += hasLineOfSight ? 1 : 0;
         }
 
-        Vector3 ownerPos = ((RaytracedAudioPlayer3D) Owner).GlobalPosition;
+        Vector3 ownerPos = ((Node3D) Owner).GlobalPosition;
         if (Bounces == 1) {
             EchoDistance = hitPos.DistanceTo(ownerPos);
             EchoCount += 1;

@@ -3,6 +3,6 @@ A rewrite of [Tienne_k's raytraced-audio](https://github.com/WhoStoleMyCoffee/ra
 
 ## Added Classes
 - `RaytracedAudioListener3D` extends `AudioListener3D`
-- `RaytracedAudioPlayer3D` extends `AudioPlayer3D`
+- `RaytracedAudioPlayer3D` extends `AudioStreamPlayer3D`
 
-Use them as you would use AudioListener3D and AudioPlayer3D.
+Use them as you would use AudioListener3D and AudioStreamPlayer3D.

@@ -22,21 +22,28 @@ public partial class RaytracedAudioPlayer3D : AudioStreamPlayer3D {
     
 
     [Export]
-    private float audibilityThresholdDb = -30;
+    private float _audibilityThresholdDb = -30;
     public float AudibilityThresholdDb {
-        get => audibilityThresholdDb;
+        get => _audibilityThresholdDb;
         set {
-            audibilityThresholdDb = value;
+            if (Mathf.IsEqualApprox(_audibilityThresholdDb, value)) {
+                return;
+            }
+
+            _audibilityThresholdDb = value;
 
             if (IsNodeReady() && MaxDistance == 0) {
-                MaxDistance = CalculateAudibleDistanceThreshold();
-                EmitSignal(SignalName.AudibleDistanceUpdated, MaxDistance);
+                float newDistance = CalculateAudibleDistanceThreshold();
+                if (newDistance > 0) {
+                    MaxDistance = newDistance;
+                    EmitSignal(SignalName.AudibleDistanceUpdated, MaxDistance);
+                }
             }
         }
     }
 
     public int LowPassRaysCount = 0;
-    public bool isEnabled = false;
+    public bool IsEnabled = false;
 
     public override void _EnterTree() {
         AddToGroup(GROUP_NAME);
@@ -51,9 +58,9 @@ public partial class RaytracedAudioPlayer3D : AudioStreamPlayer3D {
     }
 
     void SetEnable() {
-        if (isEnabled) return;
+        if (IsEnabled) return;
 
-        isEnabled = true;
+        IsEnabled = true;
 
         int i = CreateBus();
         Bus = AudioServer.GetBusName(i);
@@ -63,7 +70,7 @@ public partial class RaytracedAudioPlayer3D : AudioStreamPlayer3D {
     }
 
     void SetDisable() {
-        if (!isEnabled) return;
+        if (!IsEnabled) return;
 
         if (Bus == ProjectSettings.GetSetting("raytraced_audio/reverb_bus").ToString()) {
             _setDisable();
@@ -82,7 +89,7 @@ public partial class RaytracedAudioPlayer3D : AudioStreamPlayer3D {
     }
 
     void _setDisable() {
-        isEnabled = false;
+        IsEnabled = false;
         Bus = ProjectSettings.GetSetting("raytraced_audio/reverb_bus").ToString();
         RemoveFromGroup(ENABLED_GROUP_NAME);
         LowPassRaysCount = 0;
@@ -105,12 +112,8 @@ public partial class RaytracedAudioPlayer3D : AudioStreamPlayer3D {
         return $"RTAudioPlayer3D_{Name}{GD.Randi()}";
     }
 
-    bool IsEnabled() {
-        return isEnabled;
-    }
-
     public void Update(RaytracedAudioListener3D listener) {
-        if (isEnabled) {
+        if (IsEnabled) {
             _update(listener.RaysCount, listener.MuffleInterpolation);
         }
 
@@ -188,7 +191,7 @@ public partial class RaytracedAudioPlayer3D : AudioStreamPlayer3D {
         }
     }
 
-    bool isAudible(Vector3 fromPos) {
-        return GetVolumeDbFromPos(fromPos) >= audibilityThresholdDb;
+    bool IsAudible(Vector3 fromPos) {
+        return GetVolumeDbFromPos(fromPos) >= _audibilityThresholdDb;
     }
 }

@@ -22,34 +22,38 @@ public partial class RaytracedAudioListener3D : AudioListener3D {
     Array<AudioRay3D> rays = [];
 
 
-    private bool isEnabled = true;
+    private bool _isEnabled = true;
     [Export]
     bool IsEnabled {
-        get => isEnabled;
+        get => _isEnabled;
         set {
-            if (isEnabled == value) return;
-            isEnabled = value;
+            if (_isEnabled == value) {
+                return;
+            }
 
-            if (isEnabled) {
-                if (IsNodeReady()) {
-                    Setup();
-                }
+            _isEnabled = value;
+
+            if (!IsNodeReady()) {
+                return;
+            }
+
+            if (_isEnabled) {
+                Setup();
+                MakeCurrent();
                 EmitSignal(SignalName.Enabled);
             } else {
+                Clear();
                 EmitSignal(SignalName.Disabled);
-                if (IsNodeReady()) {
-                    Clear();
-                }
             }
         }
     }
 
-    private bool autoUpdate = true;
+    private bool _autoUpdate = true;
     [Export]
     bool AutoUpdate {
-        get => autoUpdate;
+        get => _autoUpdate;
         set {
-            autoUpdate = value;
+            _autoUpdate = value;
             SetProcess(AutoUpdate);
         }
     }
@@ -69,34 +73,34 @@ public partial class RaytracedAudioListener3D : AudioListener3D {
         }
     }
 
-    private float maxRaycastDist = SPEED_OF_SOUND;
+    private float _maxRaycastDist = SPEED_OF_SOUND;
     [Export]
     float MaxRaycastDistance {
-        get => maxRaycastDist;
+        get => _maxRaycastDist;
         set {
-            maxRaycastDist = value;
+            _maxRaycastDist = value;
 
             UpdateRayConfiguration();
             EmitSignal(SignalName.RayConfigurationChanged);
         }
     }
-    private int maxBounces = 3;
+    private int _maxBounces = 3;
     [Export]
     int MaxBounces {
-        get => maxBounces;
+        get => _maxBounces;
         set {
-            maxBounces = value;
+            _maxBounces = value;
             
             UpdateRayConfiguration();
             EmitSignal(SignalName.RayConfigurationChanged);
         }
     }
-    private RayScatterModel rayScatterModel = RayScatterModel.RANDOM;
+    private RayScatterModel _rayScatterModel = RayScatterModel.RANDOM;
     [Export]
     RayScatterModel RaytraceScatterModel {
-        get => rayScatterModel;
+        get => _rayScatterModel;
         set {
-            rayScatterModel = value;
+            _rayScatterModel = value;
 
             UpdateRayConfiguration();
             EmitSignal(SignalName.RayConfigurationChanged);
@@ -106,27 +110,27 @@ public partial class RaytracedAudioListener3D : AudioListener3D {
 
     [ExportCategory("Muffle")]
     [Export]
-    bool muffleEnabled = true;
+    public bool MuffleEnabled = true;
     [Export]
     public float MuffleInterpolation = 0.01f;
     [ExportCategory("Echo")]
     [Export]
-    bool echoEnabled = true;
+    public bool EchoEnabled = true;
     [Export]
-    float echoRoomSizeMultiplier = 2f;
+    public float EchoRoomSizeMultiplier = 2f;
     [Export]
-    float echoInterpolation = 0.01f;
+    public float EchoInterpolation = 0.01f;
     [ExportCategory("Ambient")]
     [Export]
-    bool ambientEnabled = true;
+    public bool AmbientEnabled = true;
     [Export]
-    float ambientPanInterpolation = 0.02f;
+    public float AmbientPanInterpolation = 0.02f;
     [Export]
-    float ambientPanStrength = 1;
+    public float AmbientPanStrength = 1;
     [Export]
-    float ambientVolumeInterpolation = 0.01f;
+    public float AmbientVolumeInterpolation = 0.01f;
     [Export]
-    float ambientVolumeAttenuation = 0.998f;
+    public float AmbientVolumeAttenuation = 0.998f;
 
     float roomSize = 0;
     float ambience = 0;
@@ -149,7 +153,7 @@ public partial class RaytracedAudioListener3D : AudioListener3D {
         int i = AudioServer.GetBusIndex(ProjectSettings.GetSetting("raytraced_audio/reverb_bus").ToString());
         if (i == -1) {
             GD.PrintErr($"Failed to get reverb bus for raytraced audio. Disabling echo...");
-            echoEnabled = false;
+            EchoEnabled = false;
         } else {
             reverbEffect = (AudioEffectReverb) AudioServer.GetBusEffect(i, 0);
         }
@@ -158,25 +162,25 @@ public partial class RaytracedAudioListener3D : AudioListener3D {
         i = AudioServer.GetBusIndex(ProjectSettings.GetSetting("raytraced_audio/ambient_bus").ToString());
         if (i == -1) {
             GD.PrintErr($"Failed to get ambient bus for raytraced audio. Disabling ambience...");
-            ambientEnabled = false;
+            AmbientEnabled = false;
         } else {
             panEffect = (AudioEffectPanner) AudioServer.GetBusEffect(i, 0);
         }
 
-        if (isEnabled) {
+        if (_isEnabled) {
             Setup();
         }
 
         SetProcess(AutoUpdate);
-        if (isEnabled) {
+        if (_isEnabled) {
             MakeCurrent();
         }
     }
 
     void Setup() {
         for(int a=0; a< _raysCount; a++) {
-            AudioRay3D rc = new(maxRaycastDist, maxBounces);
-            rc.SetScatterModel(rayScatterModel);
+            AudioRay3D rc = new(_maxRaycastDist, _maxBounces);
+            rc.SetScatterModel(_rayScatterModel);
             AddChild(rc, false, InternalMode.Back);
             rays.Add(rc);
         }
@@ -192,7 +196,7 @@ public partial class RaytracedAudioListener3D : AudioListener3D {
     }
 
     public override void _Process(double delta) {
-        if (!autoUpdate) {
+        if (!_autoUpdate) {
             SetProcess(AutoUpdate);
             return;
         }
@@ -202,7 +206,7 @@ public partial class RaytracedAudioListener3D : AudioListener3D {
 
     void Update() {
         rayCastsThisTick = 0;
-        if (!isEnabled) return;
+        if (!_isEnabled) return;
 
         float echo = 0;
         int echoCount = 0;
@@ -231,58 +235,58 @@ public partial class RaytracedAudioListener3D : AudioListener3D {
         echo = echoCount == 0 ? 0 : (echo / echoCount);
         escapedDir = escapedCount == 0 ? Vector3.Zero : (escapedDir / escapedCount);
 
-        if (muffleEnabled) {
-            updateMuffle();
+        if (MuffleEnabled) {
+            UpdateMuffle();
         }
-        if (echoEnabled) {
-            updateEcho(echo, echoCount, bouncesThisTick);
+        if (EchoEnabled) {
+            UpdateEcho(echo, echoCount, bouncesThisTick);
         }
-        if (ambientEnabled) {
-            updateAmbient(escapedStrength, escapedDir);
+        if (AmbientEnabled) {
+            UpdateAmbient(escapedStrength, escapedDir);
         }
     }
 
-    void updateMuffle() {
+    void UpdateMuffle() {
         foreach(RaytracedAudioPlayer3D player in GetTree().GetNodesInGroup(RaytracedAudioPlayer3D.GROUP_NAME)) {
             player.Update(this);
         }
     }
 
-    void updateEcho(float echo, int echoCount, int bounces) {
-        roomSize = Mathf.Lerp(roomSize, echo, echoInterpolation);
-        float e = (roomSize * echoRoomSizeMultiplier) / SPEED_OF_SOUND;
+    void UpdateEcho(float echo, int echoCount, int bounces) {
+        roomSize = Mathf.Lerp(roomSize, echo, EchoInterpolation);
+        float e = roomSize * EchoRoomSizeMultiplier / SPEED_OF_SOUND;
 
-        reverbEffect.RoomSize = Mathf.Lerp(reverbEffect.RoomSize, Mathf.Clamp(e, 0, 1), echoInterpolation);
-        reverbEffect.PredelayMsec = Mathf.Lerp(reverbEffect.PredelayMsec, e=1000, echoInterpolation);
-        reverbEffect.PredelayFeedback = Mathf.Lerp(reverbEffect.PredelayFeedback, Mathf.Clamp(e, 0, 0.98f), echoInterpolation);
+        reverbEffect.RoomSize = Mathf.Lerp(reverbEffect.RoomSize, Mathf.Clamp(e, 0, 1), EchoInterpolation);
+        reverbEffect.PredelayMsec = Mathf.Lerp(reverbEffect.PredelayMsec, e=1000, EchoInterpolation);
+        reverbEffect.PredelayFeedback = Mathf.Lerp(reverbEffect.PredelayFeedback, Mathf.Clamp(e, 0, 0.98f), EchoInterpolation);
 
         float returnRatio = bounces == 0 ? 0 : (echoCount/bounces);
-        reverbEffect.Hipass = Mathf.Lerp(reverbEffect.Hipass, 1-returnRatio, echoInterpolation);
+        reverbEffect.Hipass = Mathf.Lerp(reverbEffect.Hipass, 1-returnRatio, EchoInterpolation);
     }
 
-    void updateAmbient(float escapedStrength, Vector3 escapedDir) {
+    void UpdateAmbient(float escapedStrength, Vector3 escapedDir) {
         float ambienceRatio = escapedStrength / RaysCount;
 
         if (escapedStrength > 0) {
             ambience = Mathf.Lerp(ambience, 1, ambienceRatio);
         } else {
-            ambience *= ambientVolumeAttenuation;
+            ambience *= AmbientVolumeAttenuation;
         }
 
         int ambientBusIdx = AudioServer.GetBusIndex(ProjectSettings.GetSetting("raytraced_audio/ambient_bus").ToString());
         float volume = AudioServer.GetBusVolumeLinear(ambientBusIdx);
-        AudioServer.SetBusVolumeLinear(ambientBusIdx, Mathf.Lerp(volume, ambience, ambientVolumeInterpolation));
+        AudioServer.SetBusVolumeLinear(ambientBusIdx, Mathf.Lerp(volume, ambience, AmbientVolumeInterpolation));
 
-        ambientDir = ambientDir.Lerp(escapedDir, ambientPanInterpolation);
-        float targetPan = ambientDir.IsZeroApprox() ? 0 : ((RaytracedAudioListener3D) Owner).Transform.Basis.X.Dot(ambientDir.Normalized());
-        panEffect.Pan = targetPan * ambientPanStrength;
+        ambientDir = ambientDir.Lerp(escapedDir, AmbientPanInterpolation);
+        float targetPan = ambientDir.IsZeroApprox() ? 0 : ((Node3D) Owner).Transform.Basis.X.Dot(ambientDir.Normalized());
+        panEffect.Pan = targetPan * AmbientPanStrength;
     }
 
     void UpdateRayConfiguration() {
         foreach(AudioRay3D ray in rays) {
-            ray.CastDistance = maxRaycastDist;
-            ray.MaxBounces = maxBounces;
-            ray.SetScatterModel(rayScatterModel);
+            ray.CastDistance = _maxRaycastDist;
+            ray.MaxBounces = _maxBounces;
+            ray.SetScatterModel(_rayScatterModel);
         }
     }
 }
