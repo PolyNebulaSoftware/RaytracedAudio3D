@@ -58,6 +58,12 @@ public partial class RaytracedAudio3DPlugin : EditorPlugin {
             ResourceName = "pan"
         };
         AudioServer.AddBusEffect(i, panner);
+
+        // Godot bug causing ambient bus not show up properly
+        // https://github.com/WhoStoleMyCoffee/raytraced-audio/blob/4a09784b908263482a17ad2fc0d7f768cd2b9ba1/addons/raytraced_audio/plugin.gd#L69
+		i = AudioServer.BusCount;
+		AudioServer.AddBus();
+        AudioServer.RemoveBus(i);
     }
 
     static void CleanUpAudioBuses() {
