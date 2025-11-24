@@ -24,7 +24,7 @@ public partial class RaytracedAudioListener3D : AudioListener3D {
 
     private bool _isEnabled = true;
     [Export]
-    bool IsEnabled {
+    public bool IsEnabled {
         get => _isEnabled;
         set {
             if (_isEnabled == value) {
